@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="The Limit Breakers - A collaborative study platform for group learning, sharing materials, and helping each other with tough questions.">
+    <title>The Limit Breakers — Collaborative Study Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- ===================== AUTH SCREEN ===================== -->
+    <div id="auth-screen" class="screen active">
+        <div class="auth-container">
+            <div class="auth-hero">
+                <div class="hero-content">
+                    <div class="hero-shapes">
+                        <div class="shape shape-1"></div>
+                        <div class="shape shape-2"></div>
+                        <div class="shape shape-3"></div>
+                    </div>
+                    <div class="hero-text">
+                        <div class="brand-logo">
+                            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                                <rect width="48" height="48" rx="12" fill="url(#logo-grad)" />
+                                <path
+                                    d="M14 20C14 17.7909 15.7909 16 18 16H30C32.2091 16 34 17.7909 34 20V28C34 30.2091 32.2091 32 30 32H18C15.7909 32 14 30.2091 14 28V20Z"
+                                    stroke="white" stroke-width="2" />
+                                <path d="M20 22H28M20 26H26" stroke="white" stroke-width="2" stroke-linecap="round" />
+                                <circle cx="36" cy="14" r="5" fill="#F59E0B" stroke="white" stroke-width="2" />
+                                <path d="M34.5 14L35.5 15L37.5 13" stroke="white" stroke-width="1.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <defs>
+                                    <linearGradient id="logo-grad" x1="0" y1="0" x2="48" y2="48">
+                                        <stop stop-color="#6366F1" />
+                                        <stop offset="1" stop-color="#8B5CF6" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <span class="brand-name">The Limit Breakers</span>
+                        </div>
+                        <h1>Learn Together,<br><span class="gradient-text">Grow Together</span></h1>
+                        <p>A collaborative study platform where group members share materials, ask questions, and help
+                            each other succeed.</p>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <span class="stat-icon">📚</span>
+                            <span class="stat-label">Share Materials</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">❓</span>
+                            <span class="stat-label">Ask Questions</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">🤝</span>
+                            <span class="stat-label">Help Friends</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="auth-panel">
+                <div class="auth-panel-inner">
+                    <!-- Login Form -->
+                    <div id="login-form" class="auth-form active">
+                        <div class="form-header">
+                            <h2>Welcome Back</h2>
+                            <p>Sign in to continue to your study group</p>
+                        </div>
+                        <form onsubmit="handleLogin(event)">
+                            <div class="input-group">
+                                <label for="login-index">Index Number</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                        <path
+                                            d="M10 10C12.2091 10 14 8.20914 14 6C14 3.79086 12.2091 2 10 2C7.79086 2 6 3.79086 6 6C6 8.20914 7.79086 10 10 10Z"
+                                            stroke="currentColor" stroke-width="1.5" />
+                                        <path d="M3 18C3 14.134 6.13401 11 10 11C13.866 11 17 14.134 17 18"
+                                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                                    </svg>
+                                    <input type="text" id="login-index" placeholder="Enter your index number" required>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="login-password">Password</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                        <rect x="3" y="9" width="14" height="9" rx="2" stroke="currentColor"
+                                            stroke-width="1.5" />
+                                        <path d="M6 9V6C6 3.79086 7.79086 2 10 2C12.2091 2 14 3.79086 14 6V9"
+                                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                                        <circle cx="10" cy="13.5" r="1.5" fill="currentColor" />
+                                    </svg>
+                                    <input type="password" id="login-password" placeholder="Enter your password"
+                                        required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+                                <span>Sign In</span>
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </form>
+                        <div class="auth-switch">
+                            <p>Don't have an account? <a href="#" onclick="switchToRegister(event)">Register here</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="register-form" class="auth-form">
+                        <div class="form-header">
+                            <h2>Join The Limit Breakers</h2>
+                            <p>Create an account to start learning together</p>
+                        </div>
+                        <form onsubmit="handleRegister(event)">
+                            <div class="input-group">
+                                <label for="reg-name">Full Name</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                        <path
+                                            d="M10 10C12.2091 10 14 8.20914 14 6C14 3.79086 12.2091 2 10 2C7.79086 2 6 3.79086 6 6C6 8.20914 7.79086 10 10 10Z"
+                                            stroke="currentColor" stroke-width="1.5" />
+                                        <path d="M3 18C3 14.134 6.13401 11 10 11C13.866 11 17 14.134 17 18"
+                                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                                    </svg>
+                                    <input type="text" id="reg-name" placeholder="Enter your full name" required>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="reg-photo">Profile Picture <span class="optional-label">(optional)</span></label>
+                                <div class="profile-photo-picker">
+                                    <div class="user-avatar profile-photo-preview" id="reg-photo-preview" aria-label="Profile picture preview">👤</div>
+                                    <div class="profile-photo-controls">
+                                        <input type="file" id="reg-photo" accept="image/*" onchange="previewProfilePicture(event, 'reg-photo-preview')">
+                                        <small>Choose a JPG, PNG, or WebP image (up to 5 MB).</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="reg-index">Index Number</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                        <rect x="2" y="3" width="16" height="14" rx="2" stroke="currentColor"
+                                            stroke-width="1.5" />
+                                        <path d="M6 7H14M6 10H14M6 13H10" stroke="currentColor" stroke-width="1.5"
+                                            stroke-linecap="round" />
+                                    </svg>
+                                    <input type="text" id="reg-index" placeholder="e.g. PS/ITC/22/0042" required>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="reg-program">Program of Study</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                        <path d="M10 2L2 6L10 10L18 6L10 2Z" stroke="currentColor" stroke-width="1.5"
+                                            stroke-linejoin="round" />
+                                        <path d="M2 10L10 14L18 10" stroke="currentColor" stroke-width="1.5"
+                                            stroke-linejoin="round" />
+                                        <path d="M2 14L10 18L18 14" stroke="currentColor" stroke-width="1.5"
+                                            stroke-linejoin="round" />
+                                    </svg>
+                                    <input type="text" id="reg-program" placeholder="e.g. BSc Information Technology"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="reg-password">Create Password</label>
+                                <div class="input-wrapper">
+                                    <svg class="input-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                        <rect x="3" y="9" width="14" height="9" rx="2" stroke="currentColor"
+                                            stroke-width="1.5" />
+                                        <path d="M6 9V6C6 3.79086 7.79086 2 10 2C12.2091 2 14 3.79086 14 6V9"
+                                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                                        <circle cx="10" cy="13.5" r="1.5" fill="currentColor" />
+                                    </svg>
+                                    <input type="password" id="reg-password" placeholder="Create a password" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full" id="register-btn">
+                                <span>Create Account</span>
+                                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                    <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </form>
+                        <div class="auth-switch">
+                            <p>Already have an account? <a href="#" onclick="switchToLogin(event)">Sign in</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== MAIN APP ===================== -->
+    <div id="app-screen" class="screen">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo small">
+                    <svg width="36" height="36" viewBox="0 0 48 48" fill="none">
+                        <rect width="48" height="48" rx="12" fill="url(#logo-grad2)" />
+                        <path
+                            d="M14 20C14 17.7909 15.7909 16 18 16H30C32.2091 16 34 17.7909 34 20V28C34 30.2091 32.2091 32 30 32H18C15.7909 32 14 30.2091 14 28V20Z"
+                            stroke="white" stroke-width="2" />
+                        <path d="M20 22H28M20 26H26" stroke="white" stroke-width="2" stroke-linecap="round" />
+                        <circle cx="36" cy="14" r="5" fill="#F59E0B" stroke="white" stroke-width="2" />
+                        <path d="M34.5 14L35.5 15L37.5 13" stroke="white" stroke-width="1.5" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                        <defs>
+                            <linearGradient id="logo-grad2" x1="0" y1="0" x2="48" y2="48">
+                                <stop stop-color="#6366F1" />
+                                <stop offset="1" stop-color="#8B5CF6" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <span class="brand-name">The Limit Breakers</span>
+                </div>
+            </div>
+
+            <div class="sidebar-nav">
+                <a href="#" class="nav-item active" data-page="dashboard" onclick="navigate('dashboard', event)">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <rect x="2" y="2" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.5" />
+                        <rect x="12" y="2" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.5" />
+                        <rect x="2" y="12" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.5" />
+                        <rect x="12" y="12" width="8" height="8" rx="2" stroke="currentColor" stroke-width="1.5" />
+                    </svg>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="materials" onclick="navigate('materials', event)">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <path
+                            d="M4 3H8C9.10457 3 10 3.89543 10 5V19C10 17.8954 9.10457 17 8 17H4C2.89543 17 2 17.8954 2 19V5C2 3.89543 2.89543 3 4 3Z"
+                            stroke="currentColor" stroke-width="1.5" />
+                        <path
+                            d="M14 3H18C19.1046 3 20 3.89543 20 5V19C20 17.8954 19.1046 17 18 17H14C12.8954 17 12 17.8954 12 19V5C12 3.89543 12.8954 3 14 3Z"
+                            stroke="currentColor" stroke-width="1.5" />
+                    </svg>
+                    <span>Materials</span>
+                </a>
+                <a href="#" class="nav-item" data-page="questions" onclick="navigate('questions', event)">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <circle cx="11" cy="11" r="9" stroke="currentColor" stroke-width="1.5" />
+                        <path
+                            d="M8 8.5C8 7.11929 9.34315 6 11 6C12.6569 6 14 7.11929 14 8.5C14 9.88071 12.6569 11 11 11V13"
+                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                        <circle cx="11" cy="15.5" r="0.75" fill="currentColor" />
+                    </svg>
+                    <span>Questions</span>
+                </a>
+                <a href="#" class="nav-item" data-page="members" onclick="navigate('members', event)">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M2 18C2 14.6863 4.68629 12 8 12C11.3137 12 14 14.6863 14 18" stroke="currentColor"
+                            stroke-width="1.5" stroke-linecap="round" />
+                        <circle cx="16" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5" />
+                        <path d="M14 18C14 15.7909 15.7909 14 18 14C18.7286 14 19.4117 14.1948 20 14.5359"
+                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                    <span>Members</span>
+                </a>
+                <a href="#" class="nav-item" data-page="community" onclick="navigate('community', event)">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                        <path d="M3 5.5C3 4.39543 3.89543 3.5 5 3.5H17C18.1046 3.5 19 4.39543 19 5.5V13.5C19 14.6046 18.1046 15.5 17 15.5H10L5 19V15.5H5C3.89543 15.5 3 14.6046 3 13.5V5.5Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+                        <path d="M7 8H15M7 11H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                    <span>Community</span>
+                </a>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-card" id="sidebar-user-card">
+                    <div class="user-avatar" id="sidebar-avatar"></div>
+                    <div class="user-info">
+                        <span class="user-name" id="sidebar-name">User</span>
+                        <span class="user-role" id="sidebar-program">Student</span>
+                        <input type="file" id="profile-photo-input" class="visually-hidden-input" accept="image/*"
+                            onchange="handleProfilePictureChange(event)" aria-label="Upload a new profile picture">
+                        <button type="button" class="change-photo-btn" onclick="document.getElementById('profile-photo-input').click()">Change photo</button>
+                    </div>
+                    <button class="btn-icon" onclick="handleLogout()" title="Log out">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M7 17H4C3.44772 17 3 16.5523 3 16V4C3 3.44772 3.44772 3 4 3H7"
+                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M11 10H17M17 10L14 7M17 10L14 13" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="topbar">
+                <button class="btn-icon mobile-menu-btn" onclick="toggleSidebar()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M3 6H21M3 12H21M3 18H21" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" />
+                    </svg>
+                </button>
+                <div class="topbar-title">
+                    <h2 id="page-title">Dashboard</h2>
+                    <p id="page-subtitle">Welcome back! Here's what's happening in your study group.</p>
+                </div>
+                <div class="topbar-actions">
+                    <div class="search-bar">
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                            <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" />
+                            <path d="M12 12L16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                        <input type="text" id="search-input" placeholder="Search materials, questions..."
+                            oninput="handleSearch(this.value)">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-content">
+
+                <!-- ===== DASHBOARD PAGE ===== -->
+                <div id="page-dashboard" class="page active">
+                    <div class="dashboard-grid">
+                        <!-- Stats Cards -->
+                        <div class="stats-row">
+                            <div class="stat-card" id="stat-members">
+                                <div class="stat-card-icon purple">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="9" cy="7" r="3" stroke="currentColor" stroke-width="1.5" />
+                                        <path d="M3 20C3 16.134 6.13401 13 10 13C13.866 13 17 16.134 17 20"
+                                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                                        <circle cx="18" cy="9" r="2" stroke="currentColor" stroke-width="1.5" />
+                                        <path d="M17 20C17 17.7909 18.7909 16 21 16" stroke="currentColor"
+                                            stroke-width="1.5" stroke-linecap="round" />
+                                    </svg>
+                                </div>
+                                <div class="stat-card-info">
+                                    <span class="stat-number" id="total-members">0</span>
+                                    <span class="stat-desc">Members</span>
+                                </div>
+                            </div>
+                            <div class="stat-card" id="stat-materials">
+                                <div class="stat-card-icon blue">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path
+                                            d="M4 4H10C11.1046 4 12 4.89543 12 6V20C12 18.8954 11.1046 18 10 18H4C2.89543 18 2 18.8954 2 20V6C2 4.89543 2.89543 4 4 4Z"
+                                            stroke="currentColor" stroke-width="1.5" />
+                                        <path
+                                            d="M14 4H20C21.1046 4 22 4.89543 22 6V20C22 18.8954 21.1046 18 20 18H14C12.8954 18 12 18.8954 12 20V6C12 4.89543 12.8954 4 14 4Z"
+                                            stroke="currentColor" stroke-width="1.5" />
+                                    </svg>
+                                </div>
+                                <div class="stat-card-info">
+                                    <span class="stat-number" id="total-materials">0</span>
+                                    <span class="stat-desc">Materials</span>
+                                </div>
+                            </div>
+                            <div class="stat-card" id="stat-questions">
+                                <div class="stat-card-icon amber">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" />
+                                        <path
+                                            d="M9 9.5C9 8.11929 10.3431 7 12 7C13.6569 7 15 8.11929 15 9.5C15 10.8807 13.6569 12 12 12V14"
+                                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                                        <circle cx="12" cy="17" r="0.75" fill="currentColor" />
+                                    </svg>
+                                </div>
+                                <div class="stat-card-info">
+                                    <span class="stat-number" id="total-questions">0</span>
+                                    <span class="stat-desc">Questions</span>
+                                </div>
+                            </div>
+                            <div class="stat-card" id="stat-answers">
+                                <div class="stat-card-icon green">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                        <path d="M9 12L11 14L15 10" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" />
+                                    </svg>
+                                </div>
+                                <div class="stat-card-info">
+                                    <span class="stat-number" id="total-answers">0</span>
+                                    <span class="stat-desc">Answers</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity & Members -->
+                        <div class="dashboard-columns">
+                            <div class="card recent-activity">
+                                <div class="card-header">
+                                    <h3>Recent Activity</h3>
+                                </div>
+                                <div class="card-body" id="recent-activity-list">
+                                    <div class="empty-state small">
+                                        <p>No recent activity yet. Start sharing materials or asking questions!</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card member-highlights">
+                                <div class="card-header">
+                                    <h3>Group Members</h3>
+                                    <a href="#" class="link-btn" onclick="navigate('members', event)">View All</a>
+                                </div>
+                                <div class="card-body" id="dashboard-members-list">
+                                    <div class="empty-state small">
+                                        <p>No members yet. Invite your friends!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== MATERIALS PAGE ===== -->
+                <div id="page-materials" class="page">
+                    <div class="page-actions">
+                        <button class="btn btn-primary" onclick="openModal('material-modal')">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M10 4V16M4 10H16" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                            <span>Share Material</span>
+                        </button>
+                        <div class="filter-tabs" id="material-filters">
+                            <button class="filter-tab active" data-filter="all"
+                                onclick="filterMaterials('all', this)">All</button>
+                            <button class="filter-tab" data-filter="document"
+                                onclick="filterMaterials('document', this)">Documents</button>
+                            <button class="filter-tab" data-filter="link"
+                                onclick="filterMaterials('link', this)">Links</button>
+                            <button class="filter-tab" data-filter="note"
+                                onclick="filterMaterials('note', this)">Notes</button>
+                        </div>
+                    </div>
+                    <div class="materials-grid" id="materials-list">
+                        <div class="empty-state">
+                            <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                                <circle cx="40" cy="40" r="38" stroke="#E0E7FF" stroke-width="2"
+                                    stroke-dasharray="6 4" />
+                                <path
+                                    d="M28 30C28 27.7909 29.7909 26 32 26H48C50.2091 26 52 27.7909 52 30V50C52 52.2091 50.2091 54 48 54H32C29.7909 54 28 52.2091 28 50V30Z"
+                                    fill="#EEF2FF" stroke="#818CF8" stroke-width="1.5" />
+                                <path d="M34 34H46M34 40H46M34 46H42" stroke="#818CF8" stroke-width="1.5"
+                                    stroke-linecap="round" />
+                            </svg>
+                            <h3>No materials shared yet</h3>
+                            <p>Be the first to share study materials with your group!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== QUESTIONS PAGE ===== -->
+                <div id="page-questions" class="page">
+                    <div class="page-actions">
+                        <button class="btn btn-primary" onclick="openModal('question-modal')">
+                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                                <path d="M10 4V16M4 10H16" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                            <span>Ask Question</span>
+                        </button>
+                        <div class="filter-tabs" id="question-filters">
+                            <button class="filter-tab active" data-filter="all"
+                                onclick="filterQuestions('all', this)">All</button>
+                            <button class="filter-tab" data-filter="open"
+                                onclick="filterQuestions('open', this)">Open</button>
+                            <button class="filter-tab" data-filter="answered"
+                                onclick="filterQuestions('answered', this)">Answered</button>
+                        </div>
+                    </div>
+                    <div class="questions-list" id="questions-list">
+                        <div class="empty-state">
+                            <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                                <circle cx="40" cy="40" r="38" stroke="#E0E7FF" stroke-width="2"
+                                    stroke-dasharray="6 4" />
+                                <circle cx="40" cy="36" r="14" fill="#EEF2FF" stroke="#818CF8" stroke-width="1.5" />
+                                <path
+                                    d="M35 33C35 30.7909 37.2386 29 40 29C42.7614 29 45 30.7909 45 33C45 35.2091 42.7614 37 40 37V40"
+                                    stroke="#818CF8" stroke-width="2" stroke-linecap="round" />
+                                <circle cx="40" cy="44" r="1.5" fill="#818CF8" />
+                            </svg>
+                            <h3>No questions posted yet</h3>
+                            <p>Stuck on a problem? Ask your group members for help!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== MEMBERS PAGE ===== -->
+                <div id="page-members" class="page">
+                    <div class="members-grid" id="members-list">
+                        <div class="empty-state">
+                            <h3>No members found</h3>
+                            <p>Members will appear here once they register.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== COMMUNITY PAGE ===== -->
+                <div id="page-community" class="page">
+                    <div class="community-workspace">
+                        <div class="community-tabs" role="tablist" aria-label="Community sections">
+                            <button class="community-tab active" id="community-tab-chat" type="button" role="tab"
+                                aria-selected="true" aria-controls="community-panel-chat" tabindex="0"
+                                onkeydown="handleCommunityTabKeydown(event)"
+                                onclick="switchCommunityTab('chat', event)">💬 Chat</button>
+                            <button class="community-tab" id="community-tab-announcements" type="button" role="tab"
+                                aria-selected="false" aria-controls="community-panel-announcements" tabindex="-1"
+                                onkeydown="handleCommunityTabKeydown(event)"
+                                onclick="switchCommunityTab('announcements', event)">📢 Announcements</button>
+                            <button class="community-tab" id="community-tab-timetable" type="button" role="tab"
+                                aria-selected="false" aria-controls="community-panel-timetable" tabindex="-1"
+                                onkeydown="handleCommunityTabKeydown(event)"
+                                onclick="switchCommunityTab('timetable', event)">🗓️ Timetable</button>
+                        </div>
+
+                        <div class="community-panel" id="community-panel-chat" role="tabpanel" aria-labelledby="community-tab-chat" tabindex="0">
+                            <section class="card chat-card">
+                            <div class="card-header">
+                                <div>
+                                    <h3>Group chat</h3>
+                                    <p class="community-caption">Messages are saved with this browser's study group data.</p>
+                                </div>
+                                <span class="community-badge">💬 Group chat</span>
+                            </div>
+                            <div class="chat-messages" id="chat-messages" aria-live="polite">
+                                <div class="empty-state small"><p>No messages yet. Start the conversation!</p></div>
+                            </div>
+                            <form class="chat-composer" onsubmit="sendChatMessage(event)">
+                                <label class="sr-only" for="chat-message-input">Your message</label>
+                                <textarea id="chat-message-input" rows="2" maxlength="1000" placeholder="Write a message..." required></textarea>
+                                <button type="submit" class="btn btn-primary" aria-label="Send message">
+                                    <span>Send</span>
+                                    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                        <path d="M3 10L17 3L13 17L9.5 11L3 10Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                                        <path d="M9.5 11L17 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                                    </svg>
+                                </button>
+                            </form>
+                            </section>
+                        </div>
+
+                        <div class="community-panel" id="community-panel-announcements" role="tabpanel"
+                            aria-labelledby="community-tab-announcements" tabindex="0" hidden>
+                            <section class="card announcements-card">
+                                <div class="card-header">
+                                    <div>
+                                        <h3>Important announcements</h3>
+                                        <p class="community-caption">Share reminders and updates with the group.</p>
+                                    </div>
+                                </div>
+                                <form class="community-form" onsubmit="postAnnouncement(event)">
+                                    <label for="announcement-title">Title</label>
+                                    <input id="announcement-title" type="text" maxlength="80" placeholder="e.g. Exam revision session" required>
+                                    <label for="announcement-message">Details</label>
+                                    <textarea id="announcement-message" rows="3" maxlength="600" placeholder="What should everyone know?" required></textarea>
+                                    <label for="announcement-priority">Priority</label>
+                                    <select id="announcement-priority">
+                                        <option value="Important">Important</option>
+                                        <option value="Urgent">Urgent</option>
+                                        <option value="Reminder">Reminder</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-full">Post announcement</button>
+                                </form>
+                                <div class="announcement-list" id="announcement-list" aria-live="polite">
+                                    <div class="empty-state small"><p>No announcements yet.</p></div>
+                                </div>
+                            </section>
+                        </div>
+
+                        <div class="community-panel" id="community-panel-timetable" role="tabpanel"
+                            aria-labelledby="community-tab-timetable" tabindex="0" hidden>
+                            <section class="card timetable-card">
+                                <div class="card-header">
+                                    <div>
+                                        <h3>Study timetable</h3>
+                                        <p class="community-caption">Plan recurring classes and study sessions.</p>
+                                    </div>
+                                </div>
+                                <form class="community-form timetable-form" onsubmit="addTimetableEntry(event)">
+                                    <label for="timetable-subject">Class or session</label>
+                                    <input id="timetable-subject" type="text" maxlength="80" placeholder="e.g. Group study: Databases" required>
+                                    <div class="timetable-fields">
+                                        <div>
+                                            <label for="timetable-day">Day</label>
+                                            <select id="timetable-day" required>
+                                                <option value="Monday">Monday</option>
+                                                <option value="Tuesday">Tuesday</option>
+                                                <option value="Wednesday">Wednesday</option>
+                                                <option value="Thursday">Thursday</option>
+                                                <option value="Friday">Friday</option>
+                                                <option value="Saturday">Saturday</option>
+                                                <option value="Sunday">Sunday</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label for="timetable-start">Start</label>
+                                            <input id="timetable-start" type="time" required>
+                                        </div>
+                                        <div>
+                                            <label for="timetable-end">End</label>
+                                            <input id="timetable-end" type="time" required>
+                                        </div>
+                                    </div>
+                                    <label for="timetable-location">Room or link <span class="optional-label">(optional)</span></label>
+                                    <input id="timetable-location" type="text" maxlength="100" placeholder="e.g. Library, Room 2">
+                                    <button type="submit" class="btn btn-primary btn-full">Add to timetable</button>
+                                </form>
+                                <div class="timetable-list" id="timetable-list" aria-live="polite">
+                                    <div class="empty-state small"><p>No sessions scheduled yet.</p></div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ===================== MODALS ===================== -->
+
+    <!-- Material Modal -->
+    <div class="modal-overlay" id="material-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Share Learning Material</h3>
+                <button class="btn-icon" onclick="closeModal('material-modal')">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+            <form onsubmit="handleAddMaterial(event)">
+                <div class="modal-body">
+                    <div class="input-group">
+                        <label for="mat-title">Title</label>
+                        <input type="text" id="mat-title" placeholder="e.g. Data Structures Notes - Chapter 5" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="mat-type">Type</label>
+                        <select id="mat-type" required>
+                            <option value="document">📄 Document / File</option>
+                            <option value="link">🔗 Link / URL</option>
+                            <option value="note">📝 Text Note</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="mat-file-group">
+                        <label for="mat-file">Upload File</label>
+                        <div class="file-upload-area" id="file-upload-area">
+                            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                                <path d="M20 6V26M20 6L14 12M20 6L26 12" stroke="#818CF8" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M6 28V32C6 33.1046 6.89543 34 8 34H32C33.1046 34 34 33.1046 34 32V28"
+                                    stroke="#818CF8" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                            <p>Drag & drop or <span class="link-text">browse files</span></p>
+                            <span class="file-hint">PDF, DOC, PPT, images up to 10MB</span>
+                            <input type="file" id="mat-file" onchange="handleFileSelect(this)"
+                                accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.txt">
+                        </div>
+                        <div class="file-selected" id="file-selected" style="display:none;">
+                            <span id="file-name"></span>
+                            <button type="button" class="btn-icon small" onclick="clearFileSelection()">✕</button>
+                        </div>
+                    </div>
+                    <div class="input-group" id="mat-link-group" style="display:none;">
+                        <label for="mat-link">URL</label>
+                        <input type="url" id="mat-link" placeholder="https://example.com/resource">
+                    </div>
+                    <div class="input-group">
+                        <label for="mat-description">Description</label>
+                        <textarea id="mat-description" rows="3"
+                            placeholder="Brief description of this material..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="mat-subject">Subject / Course</label>
+                        <input type="text" id="mat-subject" placeholder="e.g. Computer Science, Mathematics" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('material-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Share Material</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Question Modal -->
+    <div class="modal-overlay" id="question-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Ask a Question</h3>
+                <button class="btn-icon" onclick="closeModal('question-modal')">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+            <form onsubmit="handleAddQuestion(event)">
+                <div class="modal-body">
+                    <div class="input-group">
+                        <label for="q-title">Question Title</label>
+                        <input type="text" id="q-title" placeholder="e.g. How do you solve this integral?" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="q-body">Details</label>
+                        <textarea id="q-body" rows="5"
+                            placeholder="Explain your question in detail. Include any relevant information, formulas, or context..."
+                            required></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="q-subject">Subject / Course</label>
+                        <input type="text" id="q-subject" placeholder="e.g. Calculus, Programming" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="q-image">Attach Image (optional)</label>
+                        <div class="file-upload-area small" id="q-file-upload-area">
+                            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                                <path d="M14 4V18M14 4L9 9M14 4L19 9" stroke="#818CF8" stroke-width="1.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M4 20V23C4 23.5523 4.44772 24 5 24H23C23.5523 24 24 23.5523 24 23V20"
+                                    stroke="#818CF8" stroke-width="1.5" stroke-linecap="round" />
+                            </svg>
+                            <p><span class="link-text">Upload an image</span> of the problem</p>
+                            <input type="file" id="q-image" accept="image/*" onchange="handleQuestionImage(this)">
+                        </div>
+                        <div class="file-selected" id="q-file-selected" style="display:none;">
+                            <span id="q-file-name"></span>
+                            <button type="button" class="btn-icon small" onclick="clearQuestionImage()">✕</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('question-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Post Question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Answer Modal -->
+    <div class="modal-overlay" id="answer-modal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 id="answer-modal-title">Question</h3>
+                <button class="btn-icon" onclick="closeModal('answer-modal')">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body" id="answer-modal-body">
+                <!-- Filled dynamically -->
+            </div>
+            <form onsubmit="handleAddAnswer(event)" class="answer-form">
+                <div class="modal-body" style="padding-top: 0;">
+                    <div class="input-group">
+                        <label for="answer-text">Your Answer</label>
+                        <textarea id="answer-text" rows="4" placeholder="Share your solution or explanation..."
+                            required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('answer-modal')">Close</button>
+                    <button type="submit" class="btn btn-primary">Submit Answer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
