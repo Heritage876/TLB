@@ -15,6 +15,7 @@ const STORAGE_KEYS = {
     chatMessages: 'studysync_chat_messages',
     announcements: 'studysync_announcements',
     timetable: 'studysync_timetable',
+    notifications: 'studysync_notifications',
 };
 
 const CLOUD_TABLE = 'group_data';
@@ -22,6 +23,7 @@ const CLOUD_CONFIG = window.CLOUD_CONFIG || {};
 let cloudClient = null;
 let cloudSyncTimer = null;
 let cloudBusy = false;
+let hasCompletedInitialCloudLoad = false;
 const pendingCloudWrites = new Map();
 let installPromptEvent = null;
 
@@ -39,7 +41,7 @@ function getData(key) {
 
 function setData(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
-    if (cloudClient) syncCloudData(key, data);
+    if (cloudClient && key !== STORAGE_KEYS.notifications) syncCloudData(key, data);
 }
 
 function setCloudStatus(status, message) {
@@ -108,16 +110,24 @@ async function loadCloudData() {
 
     let changed = false;
     (data || []).forEach(row => {
-        if (!Object.values(STORAGE_KEYS).includes(row.key) || row.key === STORAGE_KEYS.currentUser) return;
+        if (!Object.values(STORAGE_KEYS).includes(row.key)
+            || row.key === STORAGE_KEYS.currentUser
+            || row.key === STORAGE_KEYS.notifications) return;
         const remoteValue = cloudSafeValue(row.key, row.value);
         const serialized = JSON.stringify(remoteValue);
-        if (localStorage.getItem(row.key) !== serialized) {
+        const previousSerialized = localStorage.getItem(row.key);
+        if (previousSerialized !== serialized) {
+            if (hasCompletedInitialCloudLoad && previousSerialized
+                && [STORAGE_KEYS.chatMessages, STORAGE_KEYS.announcements].includes(row.key)) {
+                notifyForNewRecords(row.key, JSON.parse(previousSerialized), remoteValue);
+            }
             localStorage.setItem(row.key, serialized);
             changed = true;
         }
     });
 
     setCloudStatus('online', 'Shared online');
+    hasCompletedInitialCloudLoad = true;
     if (changed && getCurrentUser()) refreshAllData();
     flushPendingCloudWrites();
     return true;
@@ -1084,6 +1094,94 @@ function renderDashboardMembers() {
 // ————————————————————————————————————————
 // COMMUNITY: CHAT, ANNOUNCEMENTS & TIMETABLE
 // ————————————————————————————————————————
+function addNotification(type, title, message, sourceId) {
+    const notifications = getData(STORAGE_KEYS.notifications);
+    if (sourceId && notifications.some(item => item.sourceId === sourceId && item.type === type)) return;
+
+    notifications.unshift({
+        id: generateId(),
+        sourceId,
+        type,
+        title,
+        message,
+        createdAt: Date.now(),
+        read: false,
+    });
+    setData(STORAGE_KEYS.notifications, notifications.slice(0, 50));
+    renderNotifications();
+    if (document.visibilityState === 'visible') showToast(title, 'success');
+}
+
+function notifyForNewRecords(key, previousRecords, currentRecords) {
+    const user = getCurrentUser();
+    if (!user) return;
+    const knownIds = new Set((Array.isArray(previousRecords) ? previousRecords : []).map(item => item.id));
+    const records = Array.isArray(currentRecords) ? currentRecords : [];
+
+    records.filter(item => item.id && !knownIds.has(item.id) && item.authorId !== user.id)
+        .forEach(item => {
+            if (key === STORAGE_KEYS.chatMessages) {
+                const excerpt = item.text.length > 90 ? `${item.text.slice(0, 87)}…` : item.text;
+                addNotification('chat', `${item.authorName || 'A member'} sent a message`, excerpt, item.id);
+            } else {
+                addNotification('announcement', `New announcement: ${item.title}`, item.message, item.id);
+            }
+        });
+}
+
+function renderNotifications() {
+    const list = document.getElementById('notification-list');
+    const badge = document.getElementById('notification-count');
+    if (!list || !badge) return;
+    const notifications = getData(STORAGE_KEYS.notifications);
+    const unreadCount = notifications.filter(item => !item.read).length;
+    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    badge.hidden = unreadCount === 0;
+
+    if (notifications.length === 0) {
+        list.innerHTML = '<p class="notification-empty">You’re all caught up.</p>';
+        return;
+    }
+
+    list.innerHTML = notifications.slice(0, 30).map(item => `
+        <button type="button" class="notification-item${item.read ? '' : ' unread'}"
+            onclick="openNotification('${item.id}', '${item.type}')">
+            <span class="notification-icon">${item.type === 'chat' ? '💬' : '📢'}</span>
+            <span class="notification-copy">
+                <strong>${escapeHtml(item.title)}</strong>
+                <span>${escapeHtml(item.message)}</span>
+                <time>${formatCommunityDate(item.createdAt)}</time>
+            </span>
+            ${item.read ? '' : '<span class="notification-unread-dot" aria-label="Unread"></span>'}
+        </button>
+    `).join('');
+}
+
+function toggleNotifications() {
+    const panel = document.getElementById('notification-panel');
+    const trigger = document.getElementById('notification-trigger');
+    const opening = panel.hidden;
+    panel.hidden = !opening;
+    trigger.setAttribute('aria-expanded', String(opening));
+    if (opening) renderNotifications();
+}
+
+function markAllNotificationsRead() {
+    const notifications = getData(STORAGE_KEYS.notifications).map(item => ({ ...item, read: true }));
+    setData(STORAGE_KEYS.notifications, notifications);
+    renderNotifications();
+}
+
+function openNotification(notificationId, type) {
+    const notifications = getData(STORAGE_KEYS.notifications).map(item =>
+        item.id === notificationId ? { ...item, read: true } : item);
+    setData(STORAGE_KEYS.notifications, notifications);
+    document.getElementById('notification-panel').hidden = true;
+    document.getElementById('notification-trigger').setAttribute('aria-expanded', 'false');
+    navigate('community');
+    switchCommunityTab(type === 'chat' ? 'chat' : 'announcements');
+}
+
 function sendChatMessage(e) {
     e.preventDefault();
     const user = getCurrentUser();
@@ -1102,6 +1200,17 @@ function sendChatMessage(e) {
     setData(STORAGE_KEYS.chatMessages, messages.slice(0, 100));
     e.target.reset();
     renderChatMessages();
+}
+
+function deleteChatMessage(messageId) {
+    const user = getCurrentUser();
+    const messages = getData(STORAGE_KEYS.chatMessages);
+    const message = messages.find(item => item.id === messageId);
+    if (!user || !message || message.authorId !== user.id) return;
+
+    setData(STORAGE_KEYS.chatMessages, messages.filter(item => item.id !== messageId));
+    renderChatMessages();
+    showToast('Message deleted', 'success');
 }
 
 function renderChatMessages() {
@@ -1124,7 +1233,10 @@ function renderChatMessages() {
                 <div class="chat-bubble">
                     <span class="chat-message-author">${isOwn ? 'You' : escapeHtml(authorName)}</span>
                     <p class="chat-message-text">${escapeHtml(message.text)}</p>
-                    <time class="chat-message-time" datetime="${new Date(message.createdAt).toISOString()}">${formatCommunityDate(message.createdAt)}</time>
+                    <div class="chat-message-footer">
+                        <time class="chat-message-time" datetime="${new Date(message.createdAt).toISOString()}">${formatCommunityDate(message.createdAt)}</time>
+                        ${isOwn ? `<button class="chat-delete-btn" type="button" onclick="deleteChatMessage('${message.id}')" aria-label="Delete your message">Delete</button>` : ''}
+                    </div>
                 </div>
             </article>`;
     }).join('');
@@ -1623,9 +1735,41 @@ function refreshAllData() {
 }
 
 window.addEventListener('storage', function (event) {
-    if (event.key && Object.values(STORAGE_KEYS).includes(event.key) && event.key !== STORAGE_KEYS.currentUser) {
+    if (event.key === STORAGE_KEYS.notifications) {
+        renderNotifications();
+    } else if ([STORAGE_KEYS.chatMessages, STORAGE_KEYS.announcements].includes(event.key)) {
+        let previousRecords = [];
+        let currentRecords = [];
+        try {
+            previousRecords = JSON.parse(event.oldValue || '[]');
+            currentRecords = JSON.parse(event.newValue || '[]');
+        } catch {
+            // Ignore malformed cross-tab data and let the next refresh repair the view.
+        }
+        notifyForNewRecords(event.key, previousRecords, currentRecords);
+        if (getCurrentPage() === 'community') renderCommunity();
+    } else if (event.key && Object.values(STORAGE_KEYS).includes(event.key) && event.key !== STORAGE_KEYS.currentUser) {
         if (getCurrentPage() === 'community') renderCommunity();
         else refreshPageData(getCurrentPage());
+    }
+});
+
+document.addEventListener('click', function (event) {
+    const wrapper = document.querySelector('.notifications-wrapper');
+    const panel = document.getElementById('notification-panel');
+    if (wrapper && panel && !panel.hidden && !wrapper.contains(event.target)) {
+        panel.hidden = true;
+        document.getElementById('notification-trigger').setAttribute('aria-expanded', 'false');
+    }
+});
+
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+        const panel = document.getElementById('notification-panel');
+        if (panel && !panel.hidden) {
+            panel.hidden = true;
+            document.getElementById('notification-trigger').setAttribute('aria-expanded', 'false');
+        }
     }
 });
 
@@ -1633,6 +1777,7 @@ window.addEventListener('storage', function (event) {
 // INIT
 // ————————————————————————————————————————
 document.addEventListener('DOMContentLoaded', async function () {
+    renderNotifications();
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
         navigator.serviceWorker.register('./service-worker.js').catch(error => {
             console.warn('Offline app support could not be registered:', error);

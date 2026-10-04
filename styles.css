@@ -558,7 +558,6 @@ select {
    =================================================================== */
 .sidebar {
     position: fixed;
-    left: 0;
     top: 0;
     bottom: 0;
     width: var(--sidebar-width);
@@ -885,6 +884,166 @@ select {
 
 .btn-install[hidden] {
     display: none;
+}
+
+.notifications-wrapper {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.notification-trigger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-md);
+    background: white;
+    color: var(--gray-600);
+    cursor: pointer;
+}
+
+.notification-trigger:hover,
+.notification-trigger[aria-expanded="true"] {
+    color: #0f7180;
+    background: #f0fafb;
+    border-color: #cdecef;
+}
+
+.notification-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border: 2px solid white;
+    border-radius: var(--radius-full);
+    background: var(--error);
+    color: white;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 14px;
+    text-align: center;
+}
+
+.notification-count[hidden] {
+    display: none;
+}
+
+.notification-panel {
+    position: absolute;
+    top: calc(100% + 0.6rem);
+    right: 0;
+    z-index: 300;
+    width: min(340px, calc(100vw - 32px));
+    max-width: 340px;
+    overflow: hidden;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    background: white;
+    box-shadow: var(--shadow-xl);
+}
+
+.notification-panel[hidden] {
+    display: none;
+}
+
+.notification-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--gray-100);
+}
+
+.notification-panel-header h3 {
+    color: var(--gray-800);
+    font-size: 0.95rem;
+}
+
+.notification-mark-read {
+    border: 0;
+    background: transparent;
+    color: #0f7180;
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.notification-mark-read:hover {
+    text-decoration: underline;
+}
+
+.notification-list {
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 0;
+    border-bottom: 1px solid var(--gray-50);
+    background: white;
+    text-align: left;
+    cursor: pointer;
+}
+
+.notification-item:hover,
+.notification-item.unread {
+    background: #f5fbfc;
+}
+
+.notification-icon {
+    flex: 0 0 auto;
+    font-size: 1.1rem;
+}
+
+.notification-copy {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    gap: 0.2rem;
+}
+
+.notification-copy strong {
+    color: var(--gray-800);
+    font-size: 0.78rem;
+}
+
+.notification-copy > span {
+    color: var(--gray-600);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.notification-copy time {
+    color: var(--gray-400);
+    font-size: 0.66rem;
+}
+
+.notification-unread-dot {
+    width: 8px;
+    height: 8px;
+    margin-top: 0.35rem;
+    border-radius: 50%;
+    background: #0f9aa8;
+}
+
+.notification-empty {
+    padding: 1.4rem 1rem;
+    color: var(--gray-500);
+    font-size: 0.82rem;
+    text-align: center;
 }
 
 .page-content {
@@ -1950,11 +2109,31 @@ select {
 }
 
 .chat-message-time {
-    display: block;
     margin-top: 0.25rem;
     color: var(--gray-400);
     font-size: 0.68rem;
     text-align: right;
+}
+
+.chat-message-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem;
+}
+
+.chat-delete-btn {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--error);
+    font: inherit;
+    font-size: 0.68rem;
+    cursor: pointer;
+}
+
+.chat-delete-btn:hover {
+    text-decoration: underline;
 }
 
 .chat-composer {
@@ -2237,14 +2416,44 @@ select {
     }
 
     .topbar {
-        min-height: calc(var(--topbar-height) + env(safe-area-inset-top));
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        grid-template-rows: minmax(56px, auto) auto;
         height: auto;
-        padding: env(safe-area-inset-top) 1rem 0;
+        padding: env(safe-area-inset-top) 1rem 0.75rem;
         gap: 0.5rem;
     }
 
     .topbar-actions {
-        gap: 0.45rem;
+        display: contents;
+    }
+
+    .topbar-title {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .mobile-menu-btn {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .cloud-status {
+        display: none;
+    }
+
+    .btn-install {
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    .notifications-wrapper {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .notification-panel {
+        width: min(340px, calc(100vw - 100px));
     }
 
     .page-content {
@@ -2263,34 +2472,122 @@ select {
     }
 
     .search-bar {
-        width: 42px;
+        grid-column: 1 / -1;
+        grid-row: 2;
+        width: 100%;
         height: 42px;
-        padding: 0 0.7rem;
-        gap: 0;
-    }
-
-    .search-bar input {
-        width: 0;
-        padding: 0;
-        opacity: 0;
-    }
-
-    .search-bar:focus-within {
-        position: absolute;
-        right: 1rem;
-        top: 0.9rem;
-        width: min(65vw, 280px);
-        z-index: 2;
+        padding: 0 0.8rem;
         gap: 8px;
     }
 
-    .search-bar:focus-within input {
+    .search-bar input {
         width: 100%;
+        padding: 0;
         opacity: 1;
     }
 
     .topbar-title p {
         display: none;
+    }
+
+    /* Keep the desktop sidebar navigation visible as a compact phone rail. */
+    .sidebar,
+    .sidebar.open {
+        width: 76px;
+        transform: translateX(0);
+        box-shadow: none;
+    }
+
+    .sidebar-header {
+        padding: 0.75rem 0.35rem;
+    }
+
+    .sidebar-header .brand-logo {
+        justify-content: center;
+        margin: 0;
+    }
+
+    .sidebar-header .brand-logo svg {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 32px;
+    }
+
+    .sidebar-header .brand-name {
+        display: none;
+    }
+
+    .sidebar-nav {
+        padding: 0.75rem 0.3rem;
+        gap: 0.45rem;
+    }
+
+    .nav-item {
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.25rem;
+        min-height: 58px;
+        padding: 0.4rem 0.1rem;
+        font-size: 0.58rem;
+        line-height: 1.1;
+        text-align: center;
+        overflow-wrap: anywhere;
+    }
+
+    .nav-item svg {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 20px;
+    }
+
+    .sidebar-footer {
+        padding: 0.35rem 0.2rem;
+    }
+
+    .user-card {
+        flex-direction: column;
+        gap: 0.2rem;
+        padding: 0.25rem 0;
+    }
+
+    .user-card .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.7rem;
+    }
+
+    .user-info {
+        width: 100%;
+        text-align: center;
+    }
+
+    .sidebar .user-name {
+        font-size: 0.58rem;
+    }
+
+    .sidebar .user-role {
+        display: none;
+    }
+
+    .change-photo-btn {
+        margin: 0.15rem auto 0;
+        font-size: 0.56rem;
+        text-align: center;
+    }
+
+    .user-card > .btn-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .sidebar-overlay,
+    .mobile-menu-btn {
+        display: none !important;
+    }
+
+    .main-content {
+        margin-left: 76px;
+        min-width: 0;
     }
 
     .modal {
@@ -2320,13 +2617,6 @@ select {
     .chat-composer .btn {
         gap: 0.35rem;
         padding: 0.7rem;
-    }
-
-    .cloud-status {
-        max-width: 105px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        font-size: 0.62rem;
     }
 
     .btn-install {
