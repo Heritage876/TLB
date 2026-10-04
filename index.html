@@ -4,9 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f7180">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="description"
         content="The Limit Breakers - A collaborative study platform for group learning, sharing materials, and helping each other with tough questions.">
     <title>The Limit Breakers — Collaborative Study Platform</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="assets/app-icon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -319,6 +325,8 @@
                     <p id="page-subtitle">Welcome back! Here's what's happening in your study group.</p>
                 </div>
                 <div class="topbar-actions">
+                    <span class="cloud-status" id="cloud-status" data-state="local" role="status">Checking connection…</span>
+                    <button type="button" class="btn btn-install" id="install-app-btn" onclick="installApp()" hidden>Install app</button>
                     <div class="search-bar">
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                             <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.5" />
@@ -787,6 +795,8 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="cloud-config.js"></script>
     <script src="app.js"></script>
 </body>
 

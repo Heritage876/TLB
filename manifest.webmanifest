@@ -1,0 +1,19 @@
+{
+  "name": "The Limit Breakers Study Group",
+  "short_name": "Limit Breakers",
+  "description": "Learn and study together with your group.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f7180",
+  "icons": [
+    {
+      "src": "assets/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

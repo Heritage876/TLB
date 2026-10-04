@@ -17,6 +17,17 @@ const STORAGE_KEYS = {
     timetable: 'studysync_timetable',
 };
 
+const CLOUD_TABLE = 'group_data';
+const CLOUD_CONFIG = window.CLOUD_CONFIG || {};
+let cloudClient = null;
+let cloudSyncTimer = null;
+let cloudBusy = false;
+let installPromptEvent = null;
+
+if (window.supabase && CLOUD_CONFIG.supabaseUrl && CLOUD_CONFIG.supabaseAnonKey) {
+    cloudClient = window.supabase.createClient(CLOUD_CONFIG.supabaseUrl, CLOUD_CONFIG.supabaseAnonKey);
+}
+
 function getData(key) {
     try {
         return JSON.parse(localStorage.getItem(key)) || [];
@@ -27,7 +38,150 @@ function getData(key) {
 
 function setData(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
+    if (cloudClient) syncCloudData(key, data);
 }
+
+function setCloudStatus(status, message) {
+    const badge = document.getElementById('cloud-status');
+    if (!badge) return;
+    badge.dataset.state = status;
+    badge.textContent = message;
+    badge.title = message;
+}
+
+function cloudSafeValue(key, value) {
+    if (key !== STORAGE_KEYS.members || !Array.isArray(value)) return value;
+    return value.map(({ password, ...member }) => member);
+}
+
+async function syncCloudData(key, value) {
+    if (!cloudClient || cloudBusy) return;
+    const { data: sessionData } = await cloudClient.auth.getSession();
+    if (!sessionData.session) return;
+
+    setCloudStatus('syncing', 'Syncing…');
+    const { error } = await cloudClient.from(CLOUD_TABLE).upsert({
+        key,
+        value: cloudSafeValue(key, value),
+        updated_at: new Date().toISOString(),
+    });
+    if (error) {
+        console.error('Cloud sync failed:', error.message);
+        setCloudStatus('offline', 'Sync paused — saved on this device');
+        return;
+    }
+    setCloudStatus('online', 'Shared online');
+}
+
+async function loadCloudData() {
+    if (!cloudClient || cloudBusy) return false;
+    cloudBusy = true;
+    const { data: sessionData } = await cloudClient.auth.getSession();
+    if (!sessionData.session) {
+        cloudBusy = false;
+        return false;
+    }
+
+    setCloudStatus('syncing', 'Loading shared data…');
+    const { data, error } = await cloudClient.from(CLOUD_TABLE).select('key,value');
+    cloudBusy = false;
+    if (error) {
+        console.error('Could not load shared data:', error.message);
+        setCloudStatus('offline', 'Cloud unavailable — using saved data');
+        return false;
+    }
+
+    let changed = false;
+    (data || []).forEach(row => {
+        if (!Object.values(STORAGE_KEYS).includes(row.key) || row.key === STORAGE_KEYS.currentUser) return;
+        const remoteValue = cloudSafeValue(row.key, row.value);
+        const serialized = JSON.stringify(remoteValue);
+        if (localStorage.getItem(row.key) !== serialized) {
+            localStorage.setItem(row.key, serialized);
+            changed = true;
+        }
+    });
+
+    setCloudStatus('online', 'Shared online');
+    if (changed && getCurrentUser()) refreshAllData();
+    return true;
+}
+
+function indexToCloudEmail(index) {
+    const encodedIndex = Array.from(index.trim().toLowerCase())
+        .map(character => character.codePointAt(0).toString(16))
+        .join('-');
+    return `${encodedIndex}@members.limitbreakers.test`;
+}
+
+function cloudMemberFromUser(authUser, fallback = {}) {
+    const metadata = authUser.user_metadata || {};
+    return {
+        id: authUser.id,
+        name: metadata.name || fallback.name || 'Study member',
+        index: metadata.index || fallback.index || '',
+        program: metadata.program || fallback.program || 'Student',
+        profilePicture: fallback.profilePicture || '',
+        joinedAt: fallback.joinedAt || Date.now(),
+        materialsCount: 0,
+        questionsCount: 0,
+        answersCount: 0,
+    };
+}
+
+async function startCloudSync() {
+    if (!cloudClient) {
+        setCloudStatus('local', 'Local only — cloud not configured');
+        return;
+    }
+
+    setCloudStatus('offline', 'Cloud ready — sign in to sync');
+    const { data: sessionData, error } = await cloudClient.auth.getSession();
+    if (error) {
+        setCloudStatus('offline', 'Cloud sign-in unavailable');
+        return;
+    }
+
+    if (sessionData.session) {
+        await loadCloudData();
+        const authUser = sessionData.session.user;
+        let member = getData(STORAGE_KEYS.members).find(item => item.id === authUser.id);
+        if (!member) {
+            member = cloudMemberFromUser(authUser);
+            const members = getData(STORAGE_KEYS.members);
+            members.push(member);
+            setData(STORAGE_KEYS.members, members);
+        }
+        setCurrentUser(member);
+        enterApp();
+    }
+
+    if (cloudSyncTimer) clearInterval(cloudSyncTimer);
+    cloudSyncTimer = setInterval(() => {
+        if (getCurrentUser() && document.visibilityState === 'visible') loadCloudData();
+    }, 12000);
+}
+
+async function installApp() {
+    if (!installPromptEvent) return;
+    installPromptEvent.prompt();
+    await installPromptEvent.userChoice;
+    installPromptEvent = null;
+    document.getElementById('install-app-btn').hidden = true;
+}
+
+window.addEventListener('beforeinstallprompt', event => {
+    event.preventDefault();
+    installPromptEvent = event;
+    const button = document.getElementById('install-app-btn');
+    if (button) button.hidden = false;
+});
+
+window.addEventListener('appinstalled', () => {
+    installPromptEvent = null;
+    const button = document.getElementById('install-app-btn');
+    if (button) button.hidden = true;
+});
 
 function getCurrentUser() {
     try {
@@ -177,14 +331,6 @@ async function handleRegister(e) {
         return;
     }
 
-    const members = getData(STORAGE_KEYS.members);
-
-    // Check if index already exists
-    if (members.find(m => m.index === index)) {
-        showToast('A member with this index number already exists', 'error');
-        return;
-    }
-
     const photoFile = document.getElementById('reg-photo').files[0];
     let profilePicture = '';
     try {
@@ -194,6 +340,47 @@ async function handleRegister(e) {
             showToast(error.message || 'Could not process the selected image', 'error');
             return;
         }
+    }
+
+    if (cloudClient) {
+        const { data, error } = await cloudClient.auth.signUp({
+            email: indexToCloudEmail(index),
+            password,
+            options: { data: { name, index, program } },
+        });
+        if (error) {
+            showToast(error.message.includes('already') ? 'An account with this index number already exists' : error.message, 'error');
+            return;
+        }
+        if (!data.session || !data.user) {
+            showToast('Account created. Ask the database owner to disable email confirmation, then sign in.', 'warning');
+            return;
+        }
+
+        await loadCloudData();
+        const members = getData(STORAGE_KEYS.members);
+        const newMember = {
+            ...cloudMemberFromUser(data.user, { name, index, program }),
+            profilePicture,
+        };
+        members.push(newMember);
+        setData(STORAGE_KEYS.members, members);
+        addActivity('member', `<strong>${name}</strong> joined the study group`, newMember.id);
+        setCurrentUser(newMember);
+        showToast(`Welcome to StudySync, ${name.split(' ')[0]}! 🎉`, 'success');
+        enterApp();
+        e.target.reset();
+        const preview = document.getElementById('reg-photo-preview');
+        if (preview.dataset.previewUrl) URL.revokeObjectURL(preview.dataset.previewUrl);
+        preview.dataset.previewUrl = '';
+        preview.textContent = '👤';
+        return;
+    }
+
+    const members = getData(STORAGE_KEYS.members);
+    if (members.find(m => m.index.toLowerCase() === index.toLowerCase())) {
+        showToast('A member with this index number already exists', 'error');
+        return;
     }
 
     const newMember = {
@@ -224,10 +411,35 @@ async function handleRegister(e) {
     e.target.reset();
 }
 
-function handleLogin(e) {
+async function handleLogin(e) {
     e.preventDefault();
     const index = document.getElementById('login-index').value.trim();
     const password = document.getElementById('login-password').value;
+
+    if (cloudClient) {
+        const { data, error } = await cloudClient.auth.signInWithPassword({
+            email: indexToCloudEmail(index),
+            password,
+        });
+        if (error || !data.user) {
+            showToast('Invalid index number or password', 'error');
+            return;
+        }
+
+        await loadCloudData();
+        const members = getData(STORAGE_KEYS.members);
+        let member = members.find(item => item.id === data.user.id);
+        if (!member) {
+            member = cloudMemberFromUser(data.user, { index });
+            members.push(member);
+            setData(STORAGE_KEYS.members, members);
+        }
+        setCurrentUser(member);
+        showToast(`Welcome back, ${member.name.split(' ')[0]}! 👋`, 'success');
+        enterApp();
+        e.target.reset();
+        return;
+    }
 
     const members = getData(STORAGE_KEYS.members);
     const member = members.find(m => m.index === index && m.password === password);
@@ -244,7 +456,8 @@ function handleLogin(e) {
     e.target.reset();
 }
 
-function handleLogout() {
+async function handleLogout() {
+    if (cloudClient) await cloudClient.auth.signOut();
     localStorage.removeItem(STORAGE_KEYS.currentUser);
     document.getElementById('app-screen').classList.remove('active');
     document.getElementById('auth-screen').classList.add('active');
@@ -1394,16 +1607,33 @@ function refreshAllData() {
 }
 
 window.addEventListener('storage', function (event) {
-    if (event.key && [STORAGE_KEYS.chatMessages, STORAGE_KEYS.announcements, STORAGE_KEYS.timetable].includes(event.key)
-        && getCurrentPage() === 'community') {
-        renderCommunity();
+    if (event.key && Object.values(STORAGE_KEYS).includes(event.key) && event.key !== STORAGE_KEYS.currentUser) {
+        if (getCurrentPage() === 'community') renderCommunity();
+        else refreshPageData(getCurrentPage());
     }
 });
 
 // ————————————————————————————————————————
 // INIT
 // ————————————————————————————————————————
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+        navigator.serviceWorker.register('./service-worker.js').catch(error => {
+            console.warn('Offline app support could not be registered:', error);
+        });
+    }
+
+    if (cloudClient) {
+        await startCloudSync();
+        return;
+    }
+
+    if (window.CLOUD_CONFIG && (CLOUD_CONFIG.supabaseUrl || CLOUD_CONFIG.supabaseAnonKey)) {
+        setCloudStatus('offline', 'Supabase client unavailable');
+    } else {
+        setCloudStatus('local', 'Local only — cloud not configured');
+    }
+
     const user = getCurrentUser();
     if (user) {
         // Verify user still exists in members list
