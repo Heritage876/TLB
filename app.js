@@ -1394,9 +1394,55 @@ function formatCommunityDate(timestamp) {
     return date.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
+function createVideoRoomId() {
+    if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        return window.crypto.randomUUID().replace(/-/g, '');
+    }
+    return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 12)}`;
+}
+
+function createVideoCall() {
+    const roomName = `limit-breakers-${createVideoRoomId()}`;
+    const inviteLink = `https://meet.jit.si/${roomName}`;
+    document.getElementById('video-call-link').value = inviteLink;
+    document.getElementById('video-call-invite').hidden = false;
+    document.getElementById('video-call-join-input').value = inviteLink;
+}
+
+async function copyVideoCallLink() {
+    const link = document.getElementById('video-call-link').value;
+    if (!link) return;
+    try {
+        await navigator.clipboard.writeText(link);
+    } catch {
+        const input = document.getElementById('video-call-link');
+        input.select();
+        document.execCommand('copy');
+    }
+    showToast('Video call invite copied. Share it in your group chat.', 'success');
+}
+
+function joinVideoCall(e) {
+    if (e) e.preventDefault();
+    const value = document.getElementById('video-call-join-input').value.trim();
+    if (!value) return;
+
+    let meetingUrl;
+    if (/^https:\/\/meet\.jit\.si\/[a-zA-Z0-9_-]+\/?$/.test(value)) {
+        meetingUrl = value.replace(/\/$/, '');
+    } else if (/^[a-zA-Z0-9_-]{3,120}$/.test(value)) {
+        meetingUrl = `https://meet.jit.si/${encodeURIComponent(value)}`;
+    } else {
+        showToast('Enter a valid Jitsi invite link or room name', 'error');
+        return;
+    }
+
+    window.open(meetingUrl, '_blank', 'noopener,noreferrer');
+}
+
 function switchCommunityTab(tab, e) {
     if (e) e.preventDefault();
-    const tabs = ['chat', 'announcements', 'timetable'];
+    const tabs = ['chat', 'announcements', 'timetable', 'video'];
     if (!tabs.includes(tab)) return;
 
     tabs.forEach(name => {
@@ -1411,7 +1457,7 @@ function switchCommunityTab(tab, e) {
 }
 
 function handleCommunityTabKeydown(e) {
-    const tabs = ['chat', 'announcements', 'timetable'];
+    const tabs = ['chat', 'announcements', 'timetable', 'video'];
     const current = e.currentTarget.id.replace('community-tab-', '');
     const currentIndex = tabs.indexOf(current);
     let nextIndex = currentIndex;

@@ -2023,6 +2023,96 @@ select {
     gap: 0.75rem;
 }
 
+.video-call-content {
+    display: grid;
+    justify-items: center;
+    gap: 0.85rem;
+    padding: 2rem 1.5rem;
+    text-align: center;
+}
+
+.video-call-illustration {
+    display: grid;
+    width: 76px;
+    height: 76px;
+    place-items: center;
+    border-radius: 24px;
+    background: #e6f7f8;
+    font-size: 2.2rem;
+}
+
+.video-call-content > h4 {
+    color: var(--gray-800);
+    font-size: 1.15rem;
+}
+
+.video-call-content > p {
+    max-width: 460px;
+    color: var(--gray-500);
+    font-size: 0.86rem;
+    line-height: 1.55;
+}
+
+.video-call-invite,
+.video-call-join {
+    display: grid;
+    width: min(100%, 620px);
+    gap: 0.55rem;
+    text-align: left;
+}
+
+.video-call-invite[hidden] {
+    display: none;
+}
+
+.video-call-invite label,
+.video-call-join label {
+    color: var(--gray-700);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.video-call-link-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.video-call-link-row input {
+    min-width: 0;
+    flex: 1;
+    padding: 0.7rem 0.75rem;
+    font-size: 0.82rem;
+}
+
+.video-call-link-row .btn {
+    flex: 0 0 auto;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.8rem;
+}
+
+.video-call-divider {
+    display: flex;
+    align-items: center;
+    width: min(100%, 620px);
+    gap: 0.75rem;
+    color: var(--gray-400);
+    font-size: 0.72rem;
+}
+
+.video-call-divider::before,
+.video-call-divider::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: var(--gray-200);
+}
+
+.video-call-content > .video-call-privacy {
+    color: var(--gray-400);
+    font-size: 0.72rem;
+}
+
 .community-caption {
     color: var(--gray-500);
     font-size: 0.78rem;
@@ -2602,6 +2692,22 @@ select {
     .community-tab {
         padding: 0.7rem 0.8rem;
         font-size: 0.8rem;
+    }
+
+    .video-call-content {
+        padding: 1.5rem 1rem;
+    }
+
+    .video-call-link-row {
+        flex-wrap: wrap;
+    }
+
+    .video-call-link-row input {
+        flex: 1 1 100%;
+    }
+
+    .video-call-link-row .btn {
+        flex: 1 1 auto;
     }
 
     .chat-messages {

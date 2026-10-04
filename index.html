@@ -554,6 +554,10 @@
                                 aria-selected="false" aria-controls="community-panel-timetable" tabindex="-1"
                                 onkeydown="handleCommunityTabKeydown(event)"
                                 onclick="switchCommunityTab('timetable', event)">🗓️ Timetable</button>
+                            <button class="community-tab" id="community-tab-video" type="button" role="tab"
+                                aria-selected="false" aria-controls="community-panel-video" tabindex="-1"
+                                onkeydown="handleCommunityTabKeydown(event)"
+                                onclick="switchCommunityTab('video', event)">🎥 Video call</button>
                         </div>
 
                         <div class="community-panel" id="community-panel-chat" role="tabpanel" aria-labelledby="community-tab-chat" tabindex="0">
@@ -650,6 +654,42 @@
                                 </form>
                                 <div class="timetable-list" id="timetable-list" aria-live="polite">
                                     <div class="empty-state small"><p>No sessions scheduled yet.</p></div>
+                                </div>
+                            </section>
+                        </div>
+
+                        <div class="community-panel" id="community-panel-video" role="tabpanel"
+                            aria-labelledby="community-tab-video" tabindex="0" hidden>
+                            <section class="card video-call-card">
+                                <div class="card-header">
+                                    <div>
+                                        <h3>Study group video call</h3>
+                                        <p class="community-caption">Create an invite link and share it in your group chat so everyone can join.</p>
+                                    </div>
+                                    <span class="community-badge">🎥 Video meeting</span>
+                                </div>
+                                <div class="video-call-content">
+                                    <div class="video-call-illustration" aria-hidden="true">🎥</div>
+                                    <h4>Meet face to face</h4>
+                                    <p>Calls open in Jitsi Meet. Your browser may ask for camera and microphone permission after you join.</p>
+                                    <button type="button" class="btn btn-primary" onclick="createVideoCall()">Create a call link</button>
+                                    <div class="video-call-invite" id="video-call-invite" hidden>
+                                        <label for="video-call-link">Share this invite link with your study group</label>
+                                        <div class="video-call-link-row">
+                                            <input type="url" id="video-call-link" readonly>
+                                            <button type="button" class="btn btn-ghost" onclick="copyVideoCallLink()">Copy link</button>
+                                            <button type="button" class="btn btn-primary" onclick="joinVideoCall()">Join call</button>
+                                        </div>
+                                    </div>
+                                    <div class="video-call-divider"><span>or join an existing call</span></div>
+                                    <form class="video-call-join" onsubmit="joinVideoCall(event)">
+                                        <label for="video-call-join-input">Meeting link or room name</label>
+                                        <div class="video-call-link-row">
+                                            <input type="text" id="video-call-join-input" placeholder="Paste an invite link or room name" required>
+                                            <button type="submit" class="btn btn-ghost">Join meeting</button>
+                                        </div>
+                                    </form>
+                                    <p class="video-call-privacy">Use this link only with people you want in the meeting. Anyone with the invite can join.</p>
                                 </div>
                             </section>
                         </div>
