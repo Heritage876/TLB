@@ -4,6 +4,6 @@
  * supabase-schema.sql. Never put a service_role key in this file.
  */
 window.CLOUD_CONFIG = {
-    supabaseUrl: '',
-    supabaseAnonKey: '',
+    supabaseUrl: 'https://vlgspshdgyjjewqnhmzo.supabase.co',
+    supabaseAnonKey: 'sb_publishable_xQ0tGsDdJgbCtmbAA5mxZg_xUCxGBXm',
 };

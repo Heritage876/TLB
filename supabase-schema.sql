@@ -10,14 +10,29 @@ revoke all on public.group_data from anon;
 grant select, insert, update on public.group_data to authenticated;
 
 -- All signed-in study group members share these records.
+drop policy if exists "Signed-in members can read group data" on public.group_data;
 create policy "Signed-in members can read group data"
     on public.group_data for select to authenticated using (true);
 
+drop policy if exists "Signed-in members can add group data" on public.group_data;
 create policy "Signed-in members can add group data"
     on public.group_data for insert to authenticated with check (true);
 
+drop policy if exists "Signed-in members can update group data" on public.group_data;
 create policy "Signed-in members can update group data"
     on public.group_data for update to authenticated using (true) with check (true);
 
 -- Realtime is optional; the app also refreshes cloud data periodically.
-alter publication supabase_realtime add table public.group_data;
+do $$
+begin
+    if not exists (
+        select 1
+        from pg_publication_tables
+        where pubname = 'supabase_realtime'
+          and schemaname = 'public'
+          and tablename = 'group_data'
+    ) then
+        alter publication supabase_realtime add table public.group_data;
+    end if;
+end
+$$;

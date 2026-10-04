@@ -22,6 +22,7 @@ const CLOUD_CONFIG = window.CLOUD_CONFIG || {};
 let cloudClient = null;
 let cloudSyncTimer = null;
 let cloudBusy = false;
+const pendingCloudWrites = new Map();
 let installPromptEvent = null;
 
 if (window.supabase && CLOUD_CONFIG.supabaseUrl && CLOUD_CONFIG.supabaseAnonKey) {
@@ -55,7 +56,11 @@ function cloudSafeValue(key, value) {
 }
 
 async function syncCloudData(key, value) {
-    if (!cloudClient || cloudBusy) return;
+    if (!cloudClient) return;
+    if (cloudBusy) {
+        pendingCloudWrites.set(key, value);
+        return;
+    }
     const { data: sessionData } = await cloudClient.auth.getSession();
     if (!sessionData.session) return;
 
@@ -73,6 +78,15 @@ async function syncCloudData(key, value) {
     setCloudStatus('online', 'Shared online');
 }
 
+async function flushPendingCloudWrites() {
+    if (cloudBusy || pendingCloudWrites.size === 0) return;
+    const queuedWrites = Array.from(pendingCloudWrites.entries());
+    pendingCloudWrites.clear();
+    for (const [key, value] of queuedWrites) {
+        await syncCloudData(key, value);
+    }
+}
+
 async function loadCloudData() {
     if (!cloudClient || cloudBusy) return false;
     cloudBusy = true;
@@ -88,6 +102,7 @@ async function loadCloudData() {
     if (error) {
         console.error('Could not load shared data:', error.message);
         setCloudStatus('offline', 'Cloud unavailable — using saved data');
+        flushPendingCloudWrites();
         return false;
     }
 
@@ -104,6 +119,7 @@ async function loadCloudData() {
 
     setCloudStatus('online', 'Shared online');
     if (changed && getCurrentUser()) refreshAllData();
+    flushPendingCloudWrites();
     return true;
 }
 
