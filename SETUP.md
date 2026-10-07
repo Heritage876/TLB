@@ -20,3 +20,4 @@ The service worker caches the app shell for offline opening. Shared changes need
 Cloud accounts and data are shared in the same study-group table. Passwords are handled by Supabase Auth and are not uploaded in the member records. Existing accounts created before cloud setup remain local-only; members must register again after cloud is configured. Do not enable public/anonymous table policies.
 
 Until cloud configuration is added, the app continues to work in this browser using local storage and will show **Local only — cloud not configured**.
+

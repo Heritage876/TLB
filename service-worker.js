@@ -1,4 +1,4 @@
-const CACHE_NAME = 'limit-breakers-v1';
+const CACHE_NAME = 'limit-breakers-v2';
 const APP_SHELL = [
     './',
     './index.html',

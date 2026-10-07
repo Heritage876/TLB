@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
     announcements: 'studysync_announcements',
     timetable: 'studysync_timetable',
     notifications: 'studysync_notifications',
+    gallery: 'studysync_gallery',
 };
 
 const CLOUD_TABLE = 'group_data';
@@ -546,11 +547,13 @@ const pageConfig = {
     materials: { title: 'Learning Materials', subtitle: 'Browse and share study materials with your group.' },
     questions: { title: 'Questions & Help', subtitle: 'Ask questions and help your friends with theirs.' },
     members: { title: 'Group Members', subtitle: 'View all members in your study group.' },
+    gallery: { title: 'Gallery', subtitle: 'Share and revisit moments from your study group.' },
     community: { title: 'Community', subtitle: 'Chat with members, share announcements, and plan study sessions.' },
 };
 
 function navigate(page, e) {
     if (e) e.preventDefault();
+    if (!pageConfig[page]) return;
 
     // Update active page
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1033,42 +1036,226 @@ function renderMembers() {
         return;
     }
 
-    // Calculate real stats from data
+    container.innerHTML = members.map(renderMemberCard).join('');
+}
+
+function getMemberStats(memberId) {
     const materials = getData(STORAGE_KEYS.materials);
     const questions = getData(STORAGE_KEYS.questions);
+    return {
+        materials: materials.filter(item => item.authorId === memberId).length,
+        questions: questions.filter(item => item.authorId === memberId).length,
+        answers: questions.reduce((total, item) => total + (item.answers || []).filter(answer => answer.authorId === memberId).length, 0),
+    };
+}
 
-    container.innerHTML = members.map((m, i) => {
-        const mCount = materials.filter(mat => mat.authorId === m.id).length;
-        const qCount = questions.filter(q => q.authorId === m.id).length;
-        let aCount = 0;
-        questions.forEach(q => {
-            if (q.answers) {
-                aCount += q.answers.filter(a => a.authorId === m.id).length;
-            }
+function renderMemberCard(member, index) {
+    const stats = getMemberStats(member.id);
+    return `
+        <button type="button" class="member-card" style="animation-delay: ${index * 0.08}s"
+            onclick="openMemberProfile('${escapeHtml(member.id)}')" aria-label="View ${escapeHtml(member.name)}'s profile">
+            <span class="user-avatar" style="background: ${getAvatarColor(member.name)}">${avatarContent(member.name, member.id)}</span>
+            <span class="member-card-name">${escapeHtml(member.name)}</span>
+            <span class="member-card-index">${escapeHtml(member.index)}</span>
+            <span class="member-card-program">${escapeHtml(member.program)}</span>
+            <span class="member-card-stats">
+                <span class="member-stat"><span class="member-stat-number">${stats.materials}</span><span class="member-stat-label">Materials</span></span>
+                <span class="member-stat"><span class="member-stat-number">${stats.questions}</span><span class="member-stat-label">Questions</span></span>
+                <span class="member-stat"><span class="member-stat-number">${stats.answers}</span><span class="member-stat-label">Answers</span></span>
+            </span>
+            <span class="member-card-link">View profile</span>
+        </button>`;
+}
+
+function openMemberProfile(memberId) {
+    const member = getData(STORAGE_KEYS.members).find(item => item.id === memberId);
+    if (!member) {
+        showToast('This member profile is no longer available', 'warning');
+        return;
+    }
+
+    const stats = getMemberStats(member.id);
+    const joinedDate = member.joinedAt ? new Date(member.joinedAt).toLocaleDateString() : 'Not available';
+    document.getElementById('member-profile-title').textContent = member.name;
+    document.getElementById('member-profile-content').innerHTML = `
+        <div class="member-profile-summary">
+            <div class="user-avatar" style="background: ${getAvatarColor(member.name)}">${avatarContent(member.name, member.id)}</div>
+            <div><p class="member-profile-program">${escapeHtml(member.program || 'Student')}</p><p class="member-profile-index">Index ${escapeHtml(member.index || 'Not available')}</p></div>
+        </div>
+        <dl class="member-profile-details">
+            <div><dt>Joined</dt><dd>${escapeHtml(joinedDate)}</dd></div>
+            <div><dt>Materials shared</dt><dd>${stats.materials}</dd></div>
+            <div><dt>Questions posted</dt><dd>${stats.questions}</dd></div>
+            <div><dt>Answers given</dt><dd>${stats.answers}</dd></div>
+        </dl>`;
+
+    const actions = document.getElementById('member-profile-actions');
+    actions.innerHTML = getCurrentUser()?.id === member.id
+        ? '<button type="button" class="btn btn-primary" onclick="openMyProfileEditor()">Edit profile</button>'
+        : '<button type="button" class="btn btn-ghost" onclick="closeModal(\'member-profile-modal\')">Close</button>';
+    openModal('member-profile-modal');
+}
+
+function openMyProfileEditor() {
+    const user = getCurrentUser();
+    if (!user) return;
+    closeModal('member-profile-modal');
+    document.getElementById('profile-edit-name').value = user.name || '';
+    document.getElementById('profile-edit-program').value = user.program || '';
+    document.getElementById('profile-edit-photo').value = '';
+    const preview = document.getElementById('profile-edit-photo-preview');
+    preview.innerHTML = avatarContent(user.name, user.id);
+    preview.style.background = getAvatarColor(user.name);
+    openModal('profile-edit-modal');
+}
+
+async function saveMyProfile(event) {
+    event.preventDefault();
+    const user = getCurrentUser();
+    if (!user) return;
+    const name = document.getElementById('profile-edit-name').value.trim();
+    const program = document.getElementById('profile-edit-program').value.trim();
+    const photoInput = document.getElementById('profile-edit-photo');
+    const photoFile = photoInput.files && photoInput.files[0];
+    if (!name || !program) return;
+
+    const submitButton = event.submitter;
+    if (submitButton) submitButton.disabled = true;
+    try {
+        const profilePicture = photoFile ? await processProfilePicture(photoFile) : user.profilePicture || '';
+        if (cloudClient) {
+            const { error } = await cloudClient.auth.updateUser({ data: { name, program } });
+            if (error) throw error;
+        }
+
+        const members = getData(STORAGE_KEYS.members);
+        const memberIndex = members.findIndex(member => member.id === user.id);
+        const updatedMember = { ...(memberIndex >= 0 ? members[memberIndex] : user), name, program, profilePicture };
+        if (memberIndex >= 0) members[memberIndex] = updatedMember;
+        else members.push(updatedMember);
+        setData(STORAGE_KEYS.members, members);
+        setCurrentUser({ ...user, name, program, profilePicture });
+        updateSidebarUser();
+        closeModal('profile-edit-modal');
+        refreshAllData();
+        openMemberProfile(user.id);
+        showToast('Profile updated', 'success');
+    } catch (error) {
+        showToast(error.message || 'Could not update your profile', 'error');
+    } finally {
+        if (submitButton) submitButton.disabled = false;
+        photoInput.value = '';
+    }
+}
+
+function renderGallery(search = '') {
+    const container = document.getElementById('gallery-list');
+    if (!container) return;
+    const query = search.toLowerCase().trim();
+    const photos = getData(STORAGE_KEYS.gallery).filter(photo =>
+        !query || `${photo.caption} ${photo.authorName}`.toLowerCase().includes(query));
+    const user = getCurrentUser();
+    if (photos.length === 0) {
+        container.innerHTML = `<div class="empty-state gallery-empty"><h3>${query ? 'No matching photos' : 'The gallery is empty'}</h3><p>${query ? 'Try another search.' : 'Add a photo to share a moment with your study group.'}</p></div>`;
+        return;
+    }
+
+    container.innerHTML = photos.map(photo => `
+        <article class="gallery-item">
+            <button type="button" class="gallery-image-button" onclick="openGalleryImage('${escapeHtml(photo.id)}')" aria-label="View photo: ${escapeHtml(photo.caption || 'Shared photo')}">
+                <img src="${escapeHtml(photo.image)}" alt="${escapeHtml(photo.caption || `Photo shared by ${photo.authorName || 'a member'}`)}" loading="lazy">
+            </button>
+            <div class="gallery-item-copy">
+                <p>${escapeHtml(photo.caption || 'Shared photo')}</p>
+                <span>${escapeHtml(photo.authorName || 'Group member')} · ${timeAgo(photo.createdAt)}</span>
+            </div>
+            ${user && photo.authorId === user.id ? `<button type="button" class="gallery-delete" onclick="deleteGalleryImage('${escapeHtml(photo.id)}')" aria-label="Delete your photo">Delete</button>` : ''}
+        </article>`).join('');
+}
+
+function openGalleryImage(photoId) {
+    const photo = getData(STORAGE_KEYS.gallery).find(item => item.id === photoId);
+    if (!photo) return;
+    document.getElementById('gallery-image-title').textContent = photo.caption || 'Shared photo';
+    document.getElementById('gallery-image-preview').src = photo.image;
+    document.getElementById('gallery-image-preview').alt = photo.caption || 'Shared study group photo';
+    document.getElementById('gallery-image-credit').textContent = `Shared by ${photo.authorName || 'a member'} · ${timeAgo(photo.createdAt)}`;
+    openModal('gallery-image-modal');
+}
+
+async function addGalleryImage(event) {
+    event.preventDefault();
+    const user = getCurrentUser();
+    const input = document.getElementById('gallery-photo-input');
+    const file = input.files && input.files[0];
+    if (!user || !file) {
+        showToast('Choose a photo to add to the gallery', 'warning');
+        return;
+    }
+
+    const submitButton = event.submitter;
+    if (submitButton) submitButton.disabled = true;
+    try {
+        const image = await processGalleryImage(file);
+        const photos = getData(STORAGE_KEYS.gallery);
+        photos.unshift({
+            id: generateId(),
+            image,
+            caption: document.getElementById('gallery-caption').value.trim(),
+            authorId: user.id,
+            authorName: user.name,
+            createdAt: Date.now(),
         });
+        setData(STORAGE_KEYS.gallery, photos);
+        event.target.reset();
+        renderGallery();
+        showToast('Photo added to the gallery', 'success');
+    } catch (error) {
+        showToast(error.message || 'Could not add this photo', 'error');
+    } finally {
+        if (submitButton) submitButton.disabled = false;
+    }
+}
 
-        return `
-            <div class="member-card" style="animation-delay: ${i * 0.08}s">
-                <div class="user-avatar" style="background: ${getAvatarColor(m.name)}">${avatarContent(m.name, m.id)}</div>
-                <div class="member-card-name">${escapeHtml(m.name)}</div>
-                <div class="member-card-index">${escapeHtml(m.index)}</div>
-                <div class="member-card-program">${escapeHtml(m.program)}</div>
-                <div class="member-card-stats">
-                    <div class="member-stat">
-                        <span class="member-stat-number">${mCount}</span>
-                        <span class="member-stat-label">Materials</span>
-                    </div>
-                    <div class="member-stat">
-                        <span class="member-stat-number">${qCount}</span>
-                        <span class="member-stat-label">Questions</span>
-                    </div>
-                    <div class="member-stat">
-                        <span class="member-stat-number">${aCount}</span>
-                        <span class="member-stat-label">Answers</span>
-                    </div>
-                </div>
-            </div>`;
-    }).join('');
+function deleteGalleryImage(photoId) {
+    const user = getCurrentUser();
+    const photos = getData(STORAGE_KEYS.gallery);
+    const photo = photos.find(item => item.id === photoId);
+    if (!user || !photo || photo.authorId !== user.id) return;
+    if (!confirm('Delete this photo from the group gallery?')) return;
+    setData(STORAGE_KEYS.gallery, photos.filter(item => item.id !== photoId));
+    renderGallery();
+    showToast('Photo deleted', 'success');
+}
+
+function processGalleryImage(file) {
+    return new Promise((resolve, reject) => {
+        if (!file.type.startsWith('image/') || file.size > 10 * 1024 * 1024) {
+            reject(new Error(file.type.startsWith('image/') ? 'Gallery photos must be 10 MB or smaller' : 'Choose an image file'));
+            return;
+        }
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Could not read the selected photo'));
+        reader.onload = () => {
+            const image = new Image();
+            image.onerror = () => reject(new Error('Could not open the selected photo'));
+            image.onload = () => {
+                const canvas = document.createElement('canvas');
+                const scale = Math.min(1, 1400 / Math.max(image.width, image.height));
+                canvas.width = Math.round(image.width * scale);
+                canvas.height = Math.round(image.height * scale);
+                const context = canvas.getContext('2d');
+                if (!context) {
+                    reject(new Error('Image processing is not available'));
+                    return;
+                }
+                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                resolve(canvas.toDataURL('image/jpeg', 0.78));
+            };
+            image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
 }
 
 function renderDashboardMembers() {
@@ -1580,6 +1767,8 @@ function handleSearch(query) {
             m.program.toLowerCase().includes(query)
         );
         renderFilteredMembers(filtered);
+    } else if (currentPage === 'gallery') {
+        renderGallery(query);
     }
 }
 
@@ -1667,32 +1856,13 @@ function renderFilteredQuestions(questions) {
 
 function renderFilteredMembers(members) {
     const container = document.getElementById('members-list');
-    const materials = getData(STORAGE_KEYS.materials);
-    const questions = getData(STORAGE_KEYS.questions);
 
     if (members.length === 0) {
         container.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;"><h3>No members found</h3><p>Try a different search term.</p></div>`;
         return;
     }
 
-    container.innerHTML = members.map((m, i) => {
-        const mCount = materials.filter(mat => mat.authorId === m.id).length;
-        const qCount = questions.filter(q => q.authorId === m.id).length;
-        let aCount = 0;
-        questions.forEach(q => { if (q.answers) aCount += q.answers.filter(a => a.authorId === m.id).length; });
-        return `
-            <div class="member-card" style="animation-delay: ${i * 0.08}s">
-                <div class="user-avatar" style="background: ${getAvatarColor(m.name)}">${avatarContent(m.name, m.id)}</div>
-                <div class="member-card-name">${escapeHtml(m.name)}</div>
-                <div class="member-card-index">${escapeHtml(m.index)}</div>
-                <div class="member-card-program">${escapeHtml(m.program)}</div>
-                <div class="member-card-stats">
-                    <div class="member-stat"><span class="member-stat-number">${mCount}</span><span class="member-stat-label">Materials</span></div>
-                    <div class="member-stat"><span class="member-stat-number">${qCount}</span><span class="member-stat-label">Questions</span></div>
-                    <div class="member-stat"><span class="member-stat-number">${aCount}</span><span class="member-stat-label">Answers</span></div>
-                </div>
-            </div>`;
-    }).join('');
+    container.innerHTML = members.map(renderMemberCard).join('');
 }
 
 function getCurrentPage() {
@@ -1768,6 +1938,7 @@ function refreshPageData(page) {
         case 'materials': renderMaterials(); break;
         case 'questions': renderQuestions(); break;
         case 'members': renderMembers(); break;
+        case 'gallery': renderGallery(); break;
         case 'community': renderCommunity(); break;
     }
 }
@@ -1777,6 +1948,7 @@ function refreshAllData() {
     renderMaterials();
     renderQuestions();
     renderMembers();
+    renderGallery();
     renderCommunity();
 }
 
